@@ -8,8 +8,10 @@ namespace CourseWork.Nodes;
 public class ProcessNode<T>(IProcessor<T> processor, IQueue<T> queue) : Node<T>
 {
     public INodeSelector<T>? NextNodeSelector { get; set; }
+    public Node<T>? OverflowNode { get; set; }
     public int ProcessedCount { get; private set; }
     public int FailuresCount { get; private set; }
+    public int OverflowCount { get; private set; }
     private double _queueLengthIntegral = 0;
 
     public override void Enter(T item, double entryTime)
@@ -21,6 +23,14 @@ public class ProcessNode<T>(IProcessor<T> processor, IQueue<T> queue) : Node<T>
 
         if (queue.TryEnqueue(item))
         {
+            return;
+        }
+
+        if (OverflowNode != null)
+        {
+            OverflowCount++;
+            SimulationConfig.Log($"{CurrentTime:F2}: [{Name}] Queue full. Redirecting item to {OverflowNode.Name}.");
+            OverflowNode.Enter(item, entryTime);
             return;
         }
 
