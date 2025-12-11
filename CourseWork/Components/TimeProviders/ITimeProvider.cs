@@ -1,6 +1,6 @@
 ﻿namespace CourseWork.Components.TimeProviders;
 
-public interface ITimeProvider
+public interface ITimeProvider<T>
 {
-    double GetTime();
+    double GetTime(T item);
 }

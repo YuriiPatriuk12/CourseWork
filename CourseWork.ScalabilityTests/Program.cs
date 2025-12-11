@@ -70,8 +70,10 @@ namespace CourseWork.ScalabilityTests
 
             for (int i = 0; i < nodesCount; i++)
             {
+                var processor = new Server<SimpleItem>(1, new ConfigurableTimeProvider<SimpleItem>(_ => 1.0));
+
                 var node = new ProcessNode<SimpleItem>(
-                    new SingleChannelProcessor<SimpleItem>(new ExponentialTimeProvider(1.0)),
+                    processor,
                     new FifoQueue<SimpleItem>()
                 );
 
@@ -97,11 +99,14 @@ namespace CourseWork.ScalabilityTests
                 prevNode!.NextNodeSelector = new DirectSelector<SimpleItem>(disposeNode);
 
             var random = new Random();
+
+            var timeProvider = new ConfigurableTimeProvider<SimpleItem>(_ => 0.1);
+
             var creator = new CreateNode<SimpleItem>(
                 itemFactory: () => isTypeAware
                     ? (random.NextDouble() > 0.5 ? new TypeAItem() : new TypeBItem())
                     : new SimpleItem(),
-                intervalProvider: new ExponentialTimeProvider(0.1)
+                intervalProvider: timeProvider
             );
 
             if (isTypeAware)

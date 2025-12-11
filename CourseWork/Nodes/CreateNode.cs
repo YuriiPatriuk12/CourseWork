@@ -4,7 +4,7 @@ using CourseWork.Core;
 
 namespace CourseWork.Nodes;
 
-public class CreateNode<T>(Func<T> itemFactory, ITimeProvider intervalProvider) : Node<T>
+public class CreateNode<T>(Func<T> itemFactory, ITimeProvider<T> intervalProvider) : Node<T>
 {
     public INodeSelector<T>? NextNodeSelector { get; set; }
 
@@ -27,7 +27,7 @@ public class CreateNode<T>(Func<T> itemFactory, ITimeProvider intervalProvider) 
         var nextNode = NextNodeSelector.GetNext(newItem);
         nextNode.Enter(newItem, CurrentTime);
 
-        _nextCreationTime = CurrentTime + intervalProvider.GetTime();
+        _nextCreationTime = CurrentTime + intervalProvider.GetTime(default!);
     }
 
     public override void PrintResults()
