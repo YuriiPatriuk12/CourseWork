@@ -15,28 +15,25 @@
             SimulationConfig.Log("--- Simulation Started ---");
             while (_currentTime < simulationTime)
             {
-                var nextEventTime = _nodes.Min(n => n.GetNextEventTime());
+                var nextEvent = _nodes
+                    .Select(n => new { Node = n, Time = n.GetNextEventTime() })
+                    .OrderBy(x => x.Time)
+                    .FirstOrDefault();
 
-                if (double.IsPositiveInfinity(nextEventTime))
+                if (nextEvent == null || double.IsPositiveInfinity(nextEvent.Time))
                 {
                     SimulationConfig.Log("No more events. Simulation stopped.");
                     break;
                 }
 
-                _currentTime = nextEventTime;
+                _currentTime = nextEvent.Time;
 
                 foreach (var node in _nodes)
                 {
                     node.UpdateTime(_currentTime);
                 }
 
-                foreach (var node in _nodes)
-                {
-                    if (Math.Abs(node.GetNextEventTime() - _currentTime) < 1e-9)
-                    {
-                        node.ProcessEvent();
-                    }
-                }
+                nextEvent.Node.ProcessEvent();
             }
             SimulationConfig.Log($"\n--- Simulation Finished at time: {_currentTime:F2} ---\n");
 

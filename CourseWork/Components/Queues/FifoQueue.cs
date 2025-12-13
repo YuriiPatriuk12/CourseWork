@@ -1,6 +1,4 @@
-﻿using CourseWork.Components.Queues;
-
-namespace CourseWork.Components.Queues;
+﻿namespace CourseWork.Components.Queues;
 
 public class FifoQueue<T> : IQueue<T>
 {

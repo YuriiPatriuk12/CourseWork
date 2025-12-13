@@ -35,29 +35,46 @@ namespace CourseWork.ScalabilityTests
         {
             SimulationConfig.EnableLogging = false;
 
-            Console.WriteLine("Comparing Simple Network vs Type-Aware Network");
-            Console.WriteLine(new string('-', 60));
-            Console.WriteLine("| Nodes Count | Simple Time (ms) | Type-Aware Time (ms) |");
-            Console.WriteLine("|-------------|------------------|----------------------|");
+            Console.WriteLine("Comparing Simple Network vs Type-Aware Network (Average of 10 runs)");
+            Console.WriteLine(new string('-', 75));
+            Console.WriteLine("| Nodes Count | Avg Simple Time (ms) | Avg Type-Aware (ms) | Overhead (%) |");
+            Console.WriteLine("|-------------|----------------------|---------------------|--------------|");
 
             int[] nodesCounts = { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+            int iterations = 15;
 
             RunTestScenario(10, false);
+            RunTestScenario(10, true);
 
             foreach (var count in nodesCounts)
             {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                var simpleTime = RunTestScenario(count, isTypeAware: false);
+                long totalSimpleTime = 0;
+                long totalTypeAwareTime = 0;
 
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                var complexTime = RunTestScenario(count, isTypeAware: true);
+                for (int i = 0; i < iterations; i++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    totalSimpleTime += RunTestScenario(count, isTypeAware: false);
 
-                Console.WriteLine($"| {count,11} | {simpleTime,16} | {complexTime,20} |");
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    totalTypeAwareTime += RunTestScenario(count, isTypeAware: true);
+                }
+
+                double avgSimple = (double)totalSimpleTime / iterations;
+                double avgComplex = (double)totalTypeAwareTime / iterations;
+
+                double overhead = 0;
+                if (avgSimple > 0)
+                {
+                    overhead = ((avgComplex - avgSimple) / avgSimple) * 100.0;
+                }
+
+                Console.WriteLine($"| {count,11} | {avgSimple,20:F2} | {avgComplex,19:F2} | {overhead,10:F2}% |");
             }
 
-            Console.WriteLine(new string('-', 60));
+            Console.WriteLine(new string('-', 75));
             Console.WriteLine("Benchmark finished.");
         }
 

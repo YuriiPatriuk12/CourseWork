@@ -3,25 +3,22 @@ using CourseWork.Core;
 
 namespace CourseWork.Components.Selectors;
 
-public class WeightedSelector<T> : INodeSelector<T>
+public class WeightedSelector<T>(Func<T, List<(Node<T> Node, double Weight)>> weightProvider) : INodeSelector<T>
 {
-    private readonly List<(Node<T> Node, double Weight)> _nodes;
     private readonly Random _random = new();
-
-    public WeightedSelector(List<(Node<T> Node, double Weight)> nodes)
-    {
-        if (Math.Abs(nodes.Sum(n => n.Weight) - 1.0) > 1e-9)
-            throw new ArgumentException("Sum of weights must be 1.");
-
-        _nodes = nodes;
-    }
 
     public Node<T> GetNext(T item)
     {
+        var weightedNodes = weightProvider(item);
+
+        double totalWeight = weightedNodes.Sum(n => n.Weight);
+        if (Math.Abs(totalWeight - 1.0) > 1e-9)
+            throw new InvalidOperationException($"Sum of weights for item {item} must be 1.0, but was {totalWeight}");
+
         double randomValue = _random.NextDouble();
         double cumulativeWeight = 0;
 
-        foreach (var (node, weight) in _nodes)
+        foreach (var (node, weight) in weightedNodes)
         {
             cumulativeWeight += weight;
             if (randomValue < cumulativeWeight)
@@ -29,6 +26,7 @@ public class WeightedSelector<T> : INodeSelector<T>
                 return node;
             }
         }
-        return _nodes.Last().Node;
+
+        return weightedNodes.Last().Node;
     }
 }
